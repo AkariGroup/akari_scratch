@@ -1,0 +1,3 @@
+akari-client[depthai]
+akari-proto
+-e resources/akari_scratch_server/
