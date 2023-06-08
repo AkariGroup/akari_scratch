@@ -11,8 +11,8 @@ RUN apt-get update && \
 COPY akari_scratch_server /resources/akari_scratch_server
 COPY docker/requirements.txt /resources/requirements.txt
 RUN pip install  -r /resources/requirements.txt
-
-
+COPY config/akari /etc/akari
+COPY config/akira /etc/akira
 
 EXPOSE 52001
 CMD ["python3", "-m", "akari_scratch_server.cli"]

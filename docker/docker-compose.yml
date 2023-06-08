@@ -11,7 +11,7 @@ services:
       - "host.docker.internal:host-gateway"
     privileged: true
     volumes: 
-      - /dev:/dev
+      - /dev/bus/usb:/dev/bus/usb
   akari_scratch:
     build:
       context: ../
