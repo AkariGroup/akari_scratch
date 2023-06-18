@@ -1,0 +1,22 @@
+version: "3.7"
+services:
+  akari_scratch_server:
+    build:
+      context: ../
+      dockerfile: docker/akari_scratch_server/Dockerfile
+    image: akari-scratch-server:v1
+    ports:
+      - 52002:52002
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    privileged: true
+    volumes: 
+      - /dev/bus/usb:/dev/bus/usb
+  akari_scratch:
+    build:
+      context: ../
+      dockerfile: docker/akari_scratch/Dockerfile
+    image: akari-scratch:v1
+    ports:
+      - 8073:8073
+      - 8601:8601

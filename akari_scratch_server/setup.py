@@ -1,7 +1,7 @@
 from setuptools import find_packages, setup
 
 setup(
-    name="akira-scratch-server",
+    name="akari-scratch-server",
     version="0.1.0",
     packages=find_packages(),
     author="akari",
