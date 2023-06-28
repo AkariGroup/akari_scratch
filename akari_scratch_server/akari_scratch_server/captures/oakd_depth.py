@@ -55,7 +55,7 @@ class DepthCapture:
         if video is None:
             return None
         frame: Optional[numpy.ndarray] = video.get().getCvFrame()  # type: ignore
-        frame = cv2.resize(frame, (640, 480))
+        frame = cv2.resize(frame, (OUTPUT_WIDTH, OUTPUT_HEIGHT))
         if frame is None:
             return None
         return _get_colored_depth(frame)
