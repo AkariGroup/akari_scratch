@@ -3,7 +3,7 @@ from typing import Optional
 
 import cv2
 import depthai as dai
-import numpy
+import numpy as np
 
 OUTPUT_WIDTH =480
 OUTPUT_HEIGHT =360
@@ -40,13 +40,16 @@ class RGBCapture:
             blocking=False,
         )
 
-    def get_frame(self) -> Optional[numpy.ndarray]:
+    def get_frame(self) -> Optional[np.ndarray]:
         video = self._video
         if video is None:
             return None
-        frame: Optional[numpy.ndarray] = video.get().getCvFrame()  # type: ignore
-        frame: np.ndarray = cv2.resize(frame, (OUTPUT_WIDTH, OUTPUT_HEIGHT))
-        return frame
+        frame: Optional[np.ndarray] = video.get().getCvFrame()  # type: ignore
+        width = int(frame.shape[1] * 3 / 4)
+        brank_width = frame.shape[1] - width
+        crop_frame = frame[:, int(brank_width / 2): int(frame.shape[1] - brank_width / 2)]
+        output_frame = cv2.resize(crop_frame, (OUTPUT_WIDTH, OUTPUT_HEIGHT))
+        return output_frame
 
     def close(self) -> None:
         self._stack.close()
