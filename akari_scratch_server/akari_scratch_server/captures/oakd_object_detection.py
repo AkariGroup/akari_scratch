@@ -56,48 +56,68 @@ def _render_frame(
     results = []
     id = 0
     # Resize the frame to crop mergin
-    width = frame.shape[1]
-    height = frame.shape[1] * 3 / 4
-    brank_height = width - height
-    frame = frame[int(brank_height / 2): int(frame.shape[0] -
-                    brank_height / 2), 0:width]
-    frame: numpy.ndarray = cv2.resize(frame, (OUTPUT_WIDTH, OUTPUT_HEIGHT))
+    width = int(frame.shape[1] * 3 / 4)
+    brank_width = frame.shape[1] - width
+    height = int(frame.shape[0] * 9 / 16)
+    brank_height = frame.shape[0] - height
+    crop_frame = frame[
+        int(brank_height / 2): int(frame.shape[0] - brank_height / 2),
+        int(brank_width / 2): int(frame.shape[1] - brank_width / 2)
+        ]
+    output_frame = cv2.resize(crop_frame, (OUTPUT_WIDTH, OUTPUT_HEIGHT))
+
     for detection in detections:
-        detection.ymin = ((width / height) * detection.ymin - (brank_height / 2 / height))
-        detection.ymax =  ((width / height) * detection.ymax - (brank_height / 2 / height))
-        bbox = frameNorm(
+        detection.ymin = (detection.ymin - (brank_height / 2 / frame.shape[1]))
+        detection.ymax =  (detection.ymax - (brank_height / 2 / frame.shape[1]))
+        detection.xmin = (detection.xmin - (brank_width / 2 / frame.shape[1]))
+        detection.xmax =  (detection.xmax - (brank_width / 2 / frame.shape[1]))
+
+        origin_bbox = frameNorm(
             frame, (detection.xmin, detection.ymin, detection.xmax, detection.ymax)
         )
-        cv2.putText(
-            frame,
-            labels[detection.label],
-            (bbox[0] + 10, bbox[1] + 20),
-            cv2.FONT_HERSHEY_TRIPLEX,
-            0.5,
-            255,
-        )
-        cv2.putText(
-            frame,
-            f"{int(detection.confidence * 100)}%",
-            (bbox[0] + 10, bbox[1] + 40),
-            cv2.FONT_HERSHEY_TRIPLEX,
-            0.5,
-            255,
-        )
-        RED = (255, 0, 0)
-        cv2.rectangle(frame, (bbox[0], bbox[1]), (bbox[2], bbox[3]), RED, 2)
-        result = DetectionResult(
-            id=id,
-            name=labels[detection.label],
-            x=bbox[0],
-            width=bbox[2] - bbox[0],
-            y=bbox[1],
-            height=bbox[3] - bbox[1],
-        )
-        results.append(result)
-        id += 1
-    # Show the frame
-    return frame, results
+
+        crop_h, crop_w = crop_frame.shape[:2]
+        x_scale = OUTPUT_WIDTH / crop_w
+        y_scale = OUTPUT_HEIGHT / crop_h
+        bbox = [
+            int(origin_bbox[0] * x_scale),
+            int(origin_bbox[1] * y_scale),
+            int(origin_bbox[2] * x_scale),
+            int(origin_bbox[3] * y_scale)
+        ]
+
+        if not bbox[2] <= 0:
+            if not bbox[0] > OUTPUT_WIDTH:
+                cv2.putText(
+                    output_frame,
+                    labels[detection.label],
+                    (bbox[0] + 10, bbox[1] + 20),
+                    cv2.FONT_HERSHEY_TRIPLEX,
+                    0.5,
+                    255,
+                )
+                cv2.putText(
+                    output_frame,
+                    f"{int(detection.confidence * 100)}%",
+                    (bbox[0] + 10, bbox[1] + 40),
+                    cv2.FONT_HERSHEY_TRIPLEX,
+                    0.5,
+                    255,
+                )
+                RED = (255, 0, 0)
+                cv2.rectangle(output_frame, (bbox[0], bbox[1]), (bbox[2], bbox[3]), RED, 2)
+                result = DetectionResult(
+                    id=id,
+                    name=labels[detection.label],
+                    x=bbox[0],
+                    width=bbox[2] - bbox[0],
+                    y=bbox[1],
+                    height=bbox[3] - bbox[1],
+                )
+                results.append(result)
+                id += 1
+    # Show the output_frame
+    return output_frame, results
 
 
 class ObjectDetectionCapture:
@@ -117,7 +137,7 @@ class ObjectDetectionCapture:
         camRgb.setResolution(dai.ColorCameraProperties.SensorResolution.THE_1080_P)
         camRgb.setInterleaved(False)
         camRgb.setColorOrder(dai.ColorCameraProperties.ColorOrder.BGR)
-        camRgb.setPreviewSize(1440, 1080)
+        camRgb.setPreviewSize(PREV_WIDTH, PREV_HEIGHT)
         camRgb.setFps(10)
         xoutIsp = pipeline.create(dai.node.XLinkOut)
         xoutIsp.setStreamName("isp")
